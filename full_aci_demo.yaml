@@ -1,0 +1,230 @@
+---
+
+- name: playbook for testing anp's and epg's
+  hosts: fab2
+  connection: local
+  gather_facts: no
+
+  tasks:
+
+    # PREP
+
+    - name: ensure tenant exists
+      aci_tenant: name=AnsibleTest descr='tenant by Ansible' host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+    - pause:
+        prompt: "Press a key to continue"
+
+    - name: ensure context for tenant exists
+      aci_vrf: name=AnsibleTest_VRF descr='AnsibleTest VRF' tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+
+    - name: ensure bridge domain 1 exists
+      aci_bd: name=AnsibleTest_BD1 vrf=AnsibleTest_VRF tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: add subnet to BD
+      aci_bd_subnet: tenant=AnsibleTest bd=AnsibleTest_BD1 subnet_name=BD1 gateway=10.10.10.1 mask=24  state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+
+    - name: ensure bridge domain 2 exists
+      aci_bd: name=AnsibleTest_BD2 vrf=AnsibleTest_VRF tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: add subnet to BD
+      aci_bd_subnet: tenant=AnsibleTest bd=AnsibleTest_BD2 subnet_name=BD2 gateway=20.20.20.1 mask=24  state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+
+    - name: ensure web filter exists
+      aci_filter: name=Web_Filter tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: entry for web filter
+      aci_filter_entry: name=web_filter ether_type=ip ip_protocol=tcp tenant=AnsibleTest filter=Web_Filter dst_port=80 state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure app filter exists
+      aci_filter: name=App_Filter tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: entry for app filter
+      aci_filter_entry: name=app_filter  ether_type=ip ip_protocol=tcp tenant=AnsibleTest filter=App_Filter dst_port=1433 state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure db filter exists
+      aci_filter: name=DB_Filter tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: entry for db filter
+      aci_filter_entry: name=db_filter ether_type=ip ip_protocol=tcp tenant=AnsibleTest filter=DB_Filter dst_port=1521 state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure contracts exist
+      aci_contract: name={{ item }} tenant=AnsibleTest host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+      with_items:
+        - Web_Con
+        - App_Con
+        - DB_Con
+
+
+    - name: ensure subject exists for web contract
+      aci_contract_subject: subject=web_subject contract=Web_Con tenant=AnsibleTest host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure subject exists for web contract
+      aci_contract_subject: subject=app_subject contract=App_Con  tenant=AnsibleTest host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure subject exists for web contract
+      aci_contract_subject: subject=db_subject contract=DB_Con  tenant=AnsibleTest host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+    
+    - name: ensure filter exists for web contract
+      aci_contract_subject_to_filter: subject=web_subject contract=Web_Con filter=Web_Filter tenant=AnsibleTest host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure filter exists for web contract
+      aci_contract_subject_to_filter: subject=app_subject contract=App_Con filter=App_Filter tenant=AnsibleTest host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure filter exists for web contract
+      aci_contract_subject_to_filter: subject=db_subject contract=DB_Con filter=DB_Filter tenant=AnsibleTest host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    # TESTING APP NET PROFILES AND EPGS
+
+    - name: create app network profile
+      aci_ap: name=3Tier_App tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
+
+    - name: ensure web epg exists
+      aci_epg:
+        name: Web_EPG
+        bd: AnsibleTest_BD1
+        ap: 3Tier_App
+        tenant: AnsibleTest
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+    
+    - name: Map web epg to VMM Domain
+      aci_epg_to_domain:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: Web_EPG
+        domain_type: vmm
+        vm_provider: kubernetes
+        domain: KubeSpray
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+
+    - name: Add contracts to  web epg
+      aci_epg_to_contract:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: Web_EPG
+        contract: Web_Con
+        contract_type: consumer
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+    - name: Add contracts to  web epg
+      aci_epg_to_contract:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: Web_EPG
+        contract: App_Con
+        contract_type: provider
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+
+    - name: ensure app epg exists
+      aci_epg:
+        name: App_EPG
+        bd: AnsibleTest_BD1
+        ap: 3Tier_App
+        tenant: AnsibleTest
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+    - name: Map app epg to VMM Domain
+      aci_epg_to_domain:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: App_EPG
+        domain_type: vmm
+        vm_provider: vmware
+        domain: ACI
+        state: present        
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+    - name: Add contracts to  app epg
+      aci_epg_to_contract:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: App_EPG
+        contract: App_Con
+        contract_type: consumer
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+    - name: Add contracts to  app epg
+      aci_epg_to_contract:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: App_EPG
+        contract: DB_Con
+        contract_type: provider
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+        
+
+    - name: ensure db epg exists
+      aci_epg:
+        name: DB_EPG
+        bd: AnsibleTest_BD1
+        ap: 3Tier_App
+        tenant: AnsibleTest
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+    - name: Map  epg to VMM Domain
+      aci_epg_to_domain:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: DB_EPG
+        domain_type: vmm
+        vm_provider: vmware
+        domain: ACI
+        state: present        
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+
+
+    - name: Add contracts to  app epg
+      aci_epg_to_contract:
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: DB_EPG
+        contract: DB_Con
+        contract_type: consumer
+        state: present
+        host: "{{ inventory_hostname }}"
+        username: "{{ user }}"
+        password: "{{ pass }}"
+        validate_certs: "{{ validate_certs }}"
+ 
