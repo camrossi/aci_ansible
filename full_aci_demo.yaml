@@ -11,8 +11,6 @@
 
     - name: ensure tenant exists
       aci_tenant: name=AnsibleTest descr='tenant by Ansible' host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
-    - pause:
-        prompt: "Press a key to continue"
 
     - name: ensure context for tenant exists
       aci_vrf: name=AnsibleTest_VRF descr='AnsibleTest VRF' tenant=AnsibleTest state=present host={{ inventory_hostname }} username={{ user }} password={{ pass }} validate_certs={{ validate_certs }}
