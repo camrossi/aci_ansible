@@ -15,11 +15,11 @@
         validate_certs: no
     - name: Create a subnet
       aci_bd_subnet:
-        host: '{{ inventory_hostname }}'
-        username: '{{ lookup("env", "ANSIBLE_NET_USERNAME") }}'
-        password: '{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'
         tenant: '{{ tenant_name }}'
         bd: '{{ bd_name }}'
         gateway: '{{ gateway }}'
         mask: '{{ mask }}'
+        host: '{{ inventory_hostname }}'
+        username: '{{ lookup("env", "ANSIBLE_NET_USERNAME") }}'
+        password: '{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'
 
