@@ -1,7 +1,6 @@
 ---
 
 - name: playbook for testing anp's and epg's
-  hosts: fab2-apic1.cam.ciscolabs.com
   connection: local
   gather_facts: no
 
