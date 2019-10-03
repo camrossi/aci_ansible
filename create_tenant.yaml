@@ -6,7 +6,7 @@
 
     - name: ensure tenant exists
       aci_tenant: 
-        name: 'TenantTower'
+        name: '{{ tenant_name}}'
         descr: 'tenant by Ansible'
         host: '{{ inventory_hostname }}'
         username: '{{ lookup("env", "ANSIBLE_NET_USERNAME") }}'
