@@ -4,10 +4,6 @@
   connection: local
   tasks:
 
-    # PREP
-    - name: Show the content of the SSH Passphrase from AWX
-      debug:
-        msg: '{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'
     - name: ensure tenant exists
       aci_tenant: 
         name: 'TenantTower'
