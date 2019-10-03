@@ -6,8 +6,9 @@
 
     - name: Create EPG
       aci_epg: 
-        epg: '{{ epg_name }}'
         tenant: '{{ tenant_name }}'
+        ap: '{{ app_name }}'
+        epg: '{{ epg_name }}'
         bd: '{{ bd_name }}'
         host: '{{ inventory_hostname }}'
         username: '{{ lookup("env", "ANSIBLE_NET_USERNAME") }}'
