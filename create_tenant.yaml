@@ -6,5 +6,5 @@
     # PREP
 
     - name: ensure tenant exists
-      aci_tenant: name=TenantTower descr='tenant by Ansible' host={{ inventory_hostname }} username= '{{ lookup(env, "ANSIBLE_NET_USERNAME") }}' password='{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'  validate_certs='False'
+      aci_tenant: name=TenantTower descr='tenant by Ansible' host={{ inventory_hostname }} username='{{ lookup(env, "ANSIBLE_NET_USERNAME") }}' password='{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'  validate_certs='False'
 
