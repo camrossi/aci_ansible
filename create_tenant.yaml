@@ -12,5 +12,5 @@
         host: {{ inventory_hostname }}
         username: '{{ lookup("env", "ANSIBLE_NET_USERNAME") }}'
         password: '{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'
-        validate_certs:'False'
+        validate_certs: no
 
