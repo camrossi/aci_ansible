@@ -8,6 +8,7 @@
       aci_vrf: 
         vrf: '{{ vrf_name }}'
         host: '{{ inventory_hostname }}'
+        port: '{{ api_port }}'
         tenant: '{{ tenant_name }}'
         username: '{{ lookup("env", "ANSIBLE_NET_USERNAME") }}'
         password: '{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'
