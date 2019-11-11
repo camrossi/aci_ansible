@@ -9,7 +9,9 @@
         name: '{{ tenant_name }}'
         descr: 'tenant by Ansible'
         host: '{{ inventory_hostname }}'
+        port: '{{ inventory_port }}'
         username: '{{ lookup("env", "ANSIBLE_NET_USERNAME") }}'
         password: '{{ lookup("env", "ANSIBLE_NET_PASSWORD") }}'
         validate_certs: no
+        
 
